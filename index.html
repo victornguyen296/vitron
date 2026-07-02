@@ -202,10 +202,10 @@ function renderLogin(){
       <div class="sub">Dùng tài khoản do Vị Tròn cấp</div>
       <div id="loginMsg"></div>
       <label>Tài khoản</label>
-      <input id="username" placeholder="vd: hoang.nguyen">
+      <input id="username" placeholder="SĐT">
       <label>Mật khẩu</label>
       <input id="password" type="password" placeholder="••••••">
-      <button class="btn" style="width:100%" onclick="doLogin()">Đăng nhập</button>
+      <button class="btn" style="width:100%" onclick="doLogin()">Login</button>
     </div>
   `;
 }
@@ -462,7 +462,7 @@ async function renderAdminUsers(){
     <div class="row-flex">
       <div><label>Số bữa khởi tạo (nếu đã nạp sẵn)</label><input id="nu_meals" type="number" value="0"></div>
       <div><label>Vai trò</label>
-        <select id="nu_admin"><option value="false">Nhân viên</option><option value="true">Admin</option></select>
+        <select id="nu_admin"><option value="false">Khách hàng</option><option value="true">Admin</option></select>
       </div>
     </div>
     <div class="hint">Có thể để 0 rồi qua tab "Nạp bữa" nạp sau khi người này chuyển khoản.</div>
@@ -560,7 +560,7 @@ async function renderAdminTopup(){
   const users = (res.users || []).filter(u => !(u.isAdmin===true || u.isAdmin==='TRUE'));
 
   box.innerHTML = `
-    <div class="sub">Khi có người nạp tiền (vd 210k = 6 bữa), chọn người đó và nhập số bữa để CỘNG THÊM vào số dư hiện có. Số dư không tự reset, chỉ giảm khi đặt món.</div>
+    <div class="sub">Khi có người nạp tiền (VD: 210k = 6 bữa), chọn người đó và nhập số bữa để CỘNG THÊM vào số dư hiện có. Số dư không tự reset, chỉ giảm khi đặt món.</div>
     <div id="topupMsg"></div>
     <div class="row-flex">
       <div>
