@@ -238,24 +238,14 @@ async function doLogin(){
 
 // ---------------- USER: ĐẶT MÓN ----------------
 async function renderUserOrder(){
-  app.innerHTML = `<div class="card"><div class="empty">Đang tải menu hôm nay...</div></div>`;
   const date = todayStr();
-  let menuRes, meRes;
-  try{
-    menuRes = await api('getMenu', {date}, 'GET');
-  }catch(err){
-    app.innerHTML = `<div class="card"><div class="msg error">${err.message}</div></div>`;
-    return;
-  }
-
-  const items = menuRes.items || [];
 
   app.innerHTML = `
     <div class="card">
       <div class="row-flex" style="align-items:center;">
         <div>
           <h1>Chào ${currentUser.fullname || currentUser.username}</h1>
-          <div class="sub">Menu ngày ${date}</div>
+          <div class="sub">Đặt món trước cho bất kỳ ngày nào đã có thực đơn</div>
         </div>
         <div style="text-align:right;">
           <span class="badge-meals">🍚 Còn ${currentUser.mealsRemaining} bữa</span>
@@ -264,23 +254,13 @@ async function renderUserOrder(){
     </div>
 
     <div class="card">
-      <h2>Chọn món hôm nay</h2>
+      <h2>Chọn ngày & món</h2>
+      <label>Ngày muốn đặt</label>
+      <input type="date" id="orderDate" value="${date}" min="${date}" onchange="loadMenuForOrderDate()">
       <div id="orderMsg"></div>
-      ${items.length === 0 ? '<div class="empty">Chưa có menu cho hôm nay. Vui lòng liên hệ admin.</div>' : ''}
-      <div id="itemsList">
-        ${items.map((it,i)=>`
-          <div class="item-row">
-            <input type="checkbox" id="item_${i}" value="${escapeHtml(it)}">
-            <label for="item_${i}">${escapeHtml(it)}</label>
-          </div>
-        `).join('')}
+      <div id="itemsListWrap">
+        <div class="empty">Đang tải menu...</div>
       </div>
-      ${items.length > 0 ? `
-        <label style="margin-top:6px;">Ghi chú (nếu có)</label>
-        <textarea id="orderNote" rows="2" placeholder="vd: ít cay, không hành..."></textarea>
-        <button class="btn" onclick="doSubmitOrder('${date}')" ${currentUser.mealsRemaining<=0?'disabled':''}>Đặt món</button>
-        ${currentUser.mealsRemaining<=0?'<div class="hint">Bạn đã hết lượt đặt trong tuần này.</div>':''}
-      ` : ''}
     </div>
 
     <div class="card">
@@ -288,7 +268,44 @@ async function renderUserOrder(){
       <div id="historyBox" class="empty">Đang tải...</div>
     </div>
   `;
+  loadMenuForOrderDate();
   loadHistory();
+}
+
+async function loadMenuForOrderDate(){
+  const date = document.getElementById('orderDate').value;
+  const wrap = document.getElementById('itemsListWrap');
+  wrap.innerHTML = '<div class="empty">Đang tải menu...</div>';
+  document.getElementById('orderMsg').innerHTML = '';
+
+  let menuRes;
+  try{
+    menuRes = await api('getMenu', {date}, 'GET');
+  }catch(err){
+    wrap.innerHTML = `<div class="msg error">${err.message}</div>`;
+    return;
+  }
+  const items = menuRes.items || [];
+
+  if(items.length === 0){
+    wrap.innerHTML = '<div class="empty">Chưa có thực đơn cho ngày này. Vui lòng chọn ngày khác hoặc liên hệ admin.</div>';
+    return;
+  }
+
+  wrap.innerHTML = `
+    <div id="itemsList">
+      ${items.map((it,i)=>`
+        <div class="item-row">
+          <input type="checkbox" id="item_${i}" value="${escapeHtml(it)}">
+          <label for="item_${i}">${escapeHtml(it)}</label>
+        </div>
+      `).join('')}
+    </div>
+    <label style="margin-top:6px;">Ghi chú (nếu có)</label>
+    <textarea id="orderNote" rows="2" placeholder="vd: ít cay, không hành..."></textarea>
+    <button class="btn" onclick="doSubmitOrder('${date}')" ${currentUser.mealsRemaining<=0?'disabled':''}>Đặt món cho ngày ${date}</button>
+    ${currentUser.mealsRemaining<=0?'<div class="hint">Bạn đã hết lượt đặt, vui lòng liên hệ admin để nạp thêm.</div>':''}
+  `;
 }
 
 function escapeHtml(str){
@@ -298,6 +315,7 @@ function escapeHtml(str){
 }
 
 async function doSubmitOrder(date){
+
   const checked = Array.from(document.querySelectorAll('#itemsList input[type=checkbox]:checked')).map(c=>c.value);
   const note = document.getElementById('orderNote').value;
   const msgEl = document.getElementById('orderMsg');
