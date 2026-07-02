@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vị Tròn — Đặt cơm</title>
+<style>
+  :root{
+    --cream:#FBF6EC;
+    --green:#2E6B45;
+    --green-dark:#1F4E32;
+    --orange:#E17A2D;
+    --orange-dark:#C2621E;
+    --ink:#2B2620;
+    --line:#E4D9C4;
+    --card:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .topbar{
+    background:var(--green);
+    color:#fff;
+    padding:16px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .brand{
+    font-weight:800;
+    font-size:20px;
+    letter-spacing:0.5px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .brand .dot{color:var(--orange);}
+  .topbar button{
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.5);
+    color:#fff;
+    padding:6px 14px;
+    border-radius:20px;
+    cursor:pointer;
+    font-size:13px;
+  }
+  .topbar button:hover{background:rgba(255,255,255,0.15);}
+  .container{
+    max-width:920px;
+    margin:0 auto;
+    padding:24px 16px 60px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px;
+    margin-bottom:18px;
+    box-shadow:0 2px 10px rgba(46,107,69,0.05);
+  }
+  h1{font-size:22px;color:var(--green-dark);margin:0 0 4px;}
+  h2{font-size:17px;color:var(--green-dark);margin:0 0 14px;}
+  .sub{color:#7a7261;font-size:13px;margin-bottom:18px;}
+  label{display:block;font-size:13px;font-weight:600;margin-bottom:4px;color:#54503f;}
+  input, select, textarea{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:14px;
+    margin-bottom:14px;
+    background:#fffdf9;
+    font-family:inherit;
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--orange);outline-offset:1px;}
+  .btn{
+    display:inline-block;
+    background:var(--orange);
+    color:#fff;
+    border:none;
+    padding:11px 22px;
+    border-radius:24px;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .btn:hover{background:var(--orange-dark);}
+  .btn:disabled{background:#c9bfa8;cursor:not-allowed;}
+  .btn-secondary{
+    background:transparent;
+    color:var(--green-dark);
+    border:1.5px solid var(--green);
+  }
+  .btn-secondary:hover{background:#eef5ee;}
+  .msg{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;}
+  .msg.error{background:#FBE7E4;color:#B23A2E;}
+  .msg.success{background:#E7F3E9;color:#1F6B3A;}
+  .badge-meals{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:#FFF4E8;
+    border:1px solid #F0CFA2;
+    color:var(--orange-dark);
+    padding:8px 16px;
+    border-radius:20px;
+    font-weight:700;
+    font-size:14px;
+  }
+  .item-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    margin-bottom:8px;
+    background:#fffdf9;
+  }
+  .item-row input[type=checkbox]{width:auto;margin:0;}
+  .item-row label{margin:0;font-weight:400;color:var(--ink);font-size:14px;flex:1;cursor:pointer;}
+  .tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+  .tab{
+    padding:8px 16px;
+    border-radius:20px;
+    border:1px solid var(--line);
+    background:#fff;
+    cursor:pointer;
+    font-size:13px;
+    font-weight:600;
+    color:#7a7261;
+  }
+  .tab.active{background:var(--green);color:#fff;border-color:var(--green);}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th, td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);}
+  th{color:#7a7261;font-weight:600;font-size:12px;text-transform:uppercase;}
+  .row-flex{display:flex;gap:12px;flex-wrap:wrap;}
+  .row-flex > *{flex:1;min-width:160px;}
+  .small-btn{padding:5px 10px;font-size:12px;border-radius:14px;}
+  .empty{color:#9a927c;font-size:13px;padding:20px;text-align:center;}
+  .hint{font-size:12px;color:#9a927c;margin-top:-8px;margin-bottom:14px;}
+  .footer-note{font-size:12px;color:#9a927c;text-align:center;margin-top:20px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">VỊ<span class="dot">•</span>TRÒN <span style="font-weight:400;font-size:13px;opacity:0.85;">— đặt cơm nội bộ</span></div>
+  <button id="logoutBtn" style="display:none;" onclick="logout()">Đăng xuất</button>
+</div>
+
+<div class="container" id="app"></div>
+
+<script>
+/* ================== CẤU HÌNH ==================
+  Sau khi deploy Apps Script (Deploy > New deployment > Web app),
+  dán URL web app vào đây.
+=================================================== */
+const API_URL = "https://script.google.com/macros/s/AKfycbzTqfNr_z0txPjisxffSrkmUiq81KrgCRCcGiA5i8rTARGJo34lC7nl5xaSbbGVpJHj/exec";
+
+let currentUser = null;
+const app = document.getElementById('app');
+const logoutBtn = document.getElementById('logoutBtn');
+
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+async function api(action, params={}, method='POST'){
+  if(API_URL.includes('DÁN_URL')){
+    throw new Error('Chưa cấu hình API_URL trong file index.html');
+  }
+  if(method==='GET'){
+    const qs = new URLSearchParams({action, ...params}).toString();
+    const res = await fetch(API_URL+'?'+qs);
+    return res.json();
+  }
+  const res = await fetch(API_URL, {
+    method:'POST',
+    body: JSON.stringify({action, ...params})
+  });
+  return res.json();
+}
+
+function logout(){
+  currentUser = null;
+  logoutBtn.style.display='none';
+  renderLogin();
+}
+
+// ---------------- LOGIN ----------------
+function renderLogin(){
+  app.innerHTML = `
+    <div class="card" style="max-width:380px;margin:40px auto;">
+      <h1>Đăng nhập</h1>
+      <div class="sub">Dùng tài khoản do Vị Tròn cấp</div>
+      <div id="loginMsg"></div>
+      <label>Tài khoản</label>
+      <input id="username" placeholder="vd: hoang.nguyen">
+      <label>Mật khẩu</label>
+      <input id="password" type="password" placeholder="••••••">
+      <button class="btn" style="width:100%" onclick="doLogin()">Đăng nhập</button>
+    </div>
+  `;
+}
+
+async function doLogin(){
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  const msgEl = document.getElementById('loginMsg');
+  if(!username || !password){
+    msgEl.innerHTML = '<div class="msg error">Nhập đầy đủ tài khoản và mật khẩu</div>';
+    return;
+  }
+  try{
+    const res = await api('login', {username, password});
+    if(!res.success){
+      msgEl.innerHTML = `<div class="msg error">${res.message}</div>`;
+      return;
+    }
+    currentUser = res.user;
+    logoutBtn.style.display='inline-block';
+    if(currentUser.isAdmin === true || currentUser.isAdmin === 'TRUE' || currentUser.isAdmin === 'true'){
+      renderAdmin();
+    } else {
+      renderUserOrder();
+    }
+  }catch(err){
+    msgEl.innerHTML = `<div class="msg error">${err.message}</div>`;
+  }
+}
+
+// ---------------- USER: ĐẶT MÓN ----------------
+async function renderUserOrder(){
+  app.innerHTML = `<div class="card"><div class="empty">Đang tải menu hôm nay...</div></div>`;
+  const date = todayStr();
+  let menuRes, meRes;
+  try{
+    menuRes = await api('getMenu', {date}, 'GET');
+  }catch(err){
+    app.innerHTML = `<div class="card"><div class="msg error">${err.message}</div></div>`;
+    return;
+  }
+
+  const items = menuRes.items || [];
+
+  app.innerHTML = `
+    <div class="card">
+      <div class="row-flex" style="align-items:center;">
+        <div>
+          <h1>Chào ${currentUser.fullname || currentUser.username}</h1>
+          <div class="sub">Menu ngày ${date}</div>
+        </div>
+        <div style="text-align:right;">
+          <span class="badge-meals">🍚 Còn ${currentUser.mealsRemaining} bữa</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Chọn món hôm nay</h2>
+      <div id="orderMsg"></div>
+      ${items.length === 0 ? '<div class="empty">Chưa có menu cho hôm nay. Vui lòng liên hệ admin.</div>' : ''}
+      <div id="itemsList">
+        ${items.map((it,i)=>`
+          <div class="item-row">
+            <input type="checkbox" id="item_${i}" value="${escapeHtml(it)}">
+            <label for="item_${i}">${escapeHtml(it)}</label>
+          </div>
+        `).join('')}
+      </div>
+      ${items.length > 0 ? `
+        <label style="margin-top:6px;">Ghi chú (nếu có)</label>
+        <textarea id="orderNote" rows="2" placeholder="vd: ít cay, không hành..."></textarea>
+        <button class="btn" onclick="doSubmitOrder('${date}')" ${currentUser.mealsRemaining<=0?'disabled':''}>Đặt món</button>
+        ${currentUser.mealsRemaining<=0?'<div class="hint">Bạn đã hết lượt đặt trong tuần này.</div>':''}
+      ` : ''}
+    </div>
+
+    <div class="card">
+      <h2>Lịch sử đặt món</h2>
+      <div id="historyBox" class="empty">Đang tải...</div>
+    </div>
+  `;
+  loadHistory();
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.innerText = str;
+  return d.innerHTML;
+}
+
+async function doSubmitOrder(date){
+  const checked = Array.from(document.querySelectorAll('#itemsList input[type=checkbox]:checked')).map(c=>c.value);
+  const note = document.getElementById('orderNote').value;
+  const msgEl = document.getElementById('orderMsg');
+  if(checked.length === 0){
+    msgEl.innerHTML = '<div class="msg error">Chọn ít nhất 1 món</div>';
+    return;
+  }
+  try{
+    const res = await api('submitOrder', {
+      username: currentUser.username,
+      date,
+      itemsJson: JSON.stringify(checked),
+      note
+    });
+    if(!res.success){
+      msgEl.innerHTML = `<div class="msg error">${res.message}</div>`;
+      return;
+    }
+    currentUser.mealsRemaining = res.mealsRemaining;
+    msgEl.innerHTML = '<div class="msg success">Đặt món thành công!</div>';
+    setTimeout(()=>renderUserOrder(), 900);
+  }catch(err){
+    msgEl.innerHTML = `<div class="msg error">${err.message}</div>`;
+  }
+}
+
+async function loadHistory(){
+  const box = document.getElementById('historyBox');
+  try{
+    const res = await api('getMyOrders', {username: currentUser.username}, 'GET');
+    const orders = (res.orders||[]).sort((a,b)=> (a.date<b.date?1:-1));
+    if(orders.length===0){
+      box.innerHTML = '<div class="empty">Chưa có đơn nào</div>';
+      return;
+    }
+    box.innerHTML = `
+      <table>
+        <tr><th>Ngày</th><th>Món</th><th>Ghi chú</th></tr>
+        ${orders.map(o=>{
+          let its=[]; try{its=JSON.parse(o.itemsJson);}catch(e){}
+          return `<tr><td>${o.date}</td><td>${its.join(', ')}</td><td>${o.note||''}</td></tr>`;
+        }).join('')}
+      </table>
+    `;
+  }catch(err){
+    box.innerHTML = `<div class="msg error">${err.message}</div>`;
+  }
+}
+
+// ---------------- ADMIN ----------------
+let adminTab = 'menu';
+
+function renderAdmin(){
+  app.innerHTML = `
+    <div class="card">
+      <h1>Quản trị — Vị Tròn</h1>
+      <div class="sub">Xin chào Admin</div>
+      <div class="tabs">
+        <div class="tab ${adminTab==='menu'?'active':''}" onclick="setAdminTab('menu')">Thực đơn</div>
+        <div class="tab ${adminTab==='users'?'active':''}" onclick="setAdminTab('users')">Người dùng</div>
+        <div class="tab ${adminTab==='orders'?'active':''}" onclick="setAdminTab('orders')">Đơn hàng</div>
+        <div class="tab ${adminTab==='topup'?'active':''}" onclick="setAdminTab('topup')">Nạp bữa</div>
+      </div>
+      <div id="adminContent"></div>
+    </div>
+  `;
+  if(adminTab==='menu') renderAdminMenu();
+  if(adminTab==='users') renderAdminUsers();
+  if(adminTab==='orders') renderAdminOrders();
+  if(adminTab==='topup') renderAdminTopup();
+}
+
+function setAdminTab(tab){
+  adminTab = tab;
+  renderAdmin();
+}
+
+// -- Thực đơn --
+async function renderAdminMenu(){
+  const box = document.getElementById('adminContent');
+  const date = todayStr();
+  box.innerHTML = `
+    <label>Chọn ngày</label>
+    <input type="date" id="menuDate" value="${date}" onchange="loadMenuForDate()">
+    <div id="menuMsg"></div>
+    <label>Danh sách món (mỗi món 1 dòng)</label>
+    <textarea id="menuItems" rows="8" placeholder="Cá nục sốt cà&#10;Gà chiên sốt chua ngọt&#10;..."></textarea>
+    <button class="btn" onclick="saveMenu()">Lưu thực đơn</button>
+  `;
+  loadMenuForDate();
+}
+
+async function loadMenuForDate(){
+  const date = document.getElementById('menuDate').value;
+  const res = await api('getMenu', {date}, 'GET');
+  document.getElementById('menuItems').value = (res.items||[]).join('\n');
+}
+
+async function saveMenu(){
+  const date = document.getElementById('menuDate').value;
+  const lines = document.getElementById('menuItems').value.split('\n').map(l=>l.trim()).filter(Boolean);
+  const msgEl = document.getElementById('menuMsg');
+  try{
+    const res = await api('adminSetMenu', {date, itemsJson: JSON.stringify(lines)});
+    msgEl.innerHTML = res.success ? '<div class="msg success">Đã lưu thực đơn</div>' : `<div class="msg error">${res.message}</div>`;
+  }catch(err){
+    msgEl.innerHTML = `<div class="msg error">${err.message}</div>`;
+  }
+}
+
+// -- Người dùng --
+async function renderAdminUsers(){
+  const box = document.getElementById('adminContent');
+  box.innerHTML = `<div class="empty">Đang tải...</div>`;
+  const res = await api('adminGetUsers', {}, 'GET');
+  const users = res.users || [];
+  box.innerHTML = `
+    <div id="usersMsg"></div>
+    <table style="margin-bottom:20px;">
+      <tr><th>User</th><th>Họ tên</th><th>SĐT</th><th>Địa chỉ</th><th>Bữa còn</th><th>Admin</th><th></th></tr>
+      ${users.map(u=>`
+        <tr>
+          <td>${u.username}</td>
+          <td>${u.fullname||''}</td>
+          <td>${u.phone||''}</td>
+          <td>${u.address||''}</td>
+          <td>${u.mealsRemaining}</td>
+          <td>${(u.isAdmin===true||u.isAdmin==='TRUE')?'✔':''}</td>
+          <td><button class="btn btn-secondary small-btn" onclick="deleteUser('${u.username}')">Xoá</button></td>
+        </tr>
+      `).join('')}
+    </table>
+    <h2>Thêm người dùng mới</h2>
+    <div class="row-flex">
+      <div><label>Username</label><input id="nu_username"></div>
+      <div><label>Mật khẩu</label><input id="nu_password"></div>
+    </div>
+    <div class="row-flex">
+      <div><label>Họ tên</label><input id="nu_fullname"></div>
+      <div><label>SĐT</label><input id="nu_phone"></div>
+    </div>
+    <label>Địa chỉ giao</label>
+    <input id="nu_address">
+    <div class="row-flex">
+      <div><label>Số bữa khởi tạo (nếu đã nạp sẵn)</label><input id="nu_meals" type="number" value="0"></div>
+      <div><label>Vai trò</label>
+        <select id="nu_admin"><option value="false">Nhân viên</option><option value="true">Admin</option></select>
+      </div>
+    </div>
+    <div class="hint">Có thể để 0 rồi qua tab "Nạp bữa" nạp sau khi người này chuyển khoản.</div>
+    <button class="btn" onclick="addUser()">Thêm</button>
+  `;
+}
+
+async function addUser(){
+  const payload = {
+    username: document.getElementById('nu_username').value.trim(),
+    password: document.getElementById('nu_password').value,
+    fullname: document.getElementById('nu_fullname').value,
+    phone: document.getElementById('nu_phone').value,
+    address: document.getElementById('nu_address').value,
+    mealsRemaining: document.getElementById('nu_meals').value,
+    isAdmin: document.getElementById('nu_admin').value
+  };
+  const msgEl = document.getElementById('usersMsg');
+  if(!payload.username || !payload.password){
+    msgEl.innerHTML = '<div class="msg error">Cần nhập username và mật khẩu</div>';
+    return;
+  }
+  const res = await api('adminAddUser', payload);
+  if(res.success){
+    renderAdminUsers();
+  } else {
+    msgEl.innerHTML = `<div class="msg error">${res.message}</div>`;
+  }
+}
+
+async function deleteUser(username){
+  if(!confirm('Xoá tài khoản '+username+'?')) return;
+  await api('adminDeleteUser', {username});
+  renderAdminUsers();
+}
+
+// -- Đơn hàng --
+async function renderAdminOrders(){
+  const box = document.getElementById('adminContent');
+  const date = todayStr();
+  box.innerHTML = `
+    <label>Xem đơn theo ngày</label>
+    <input type="date" id="ordersDate" value="${date}" onchange="loadOrdersForDate()">
+    <div id="ordersBox"></div>
+    <button class="btn btn-secondary" style="margin-top:10px;" onclick="exportCSV()">Xuất CSV</button>
+  `;
+  loadOrdersForDate();
+}
+
+let lastOrders = [];
+
+async function loadOrdersForDate(){
+  const date = document.getElementById('ordersDate').value;
+  const box = document.getElementById('ordersBox');
+  box.innerHTML = '<div class="empty">Đang tải...</div>';
+  const res = await api('adminGetOrdersByDate', {date}, 'GET');
+  lastOrders = res.orders || [];
+  if(lastOrders.length===0){
+    box.innerHTML = '<div class="empty">Chưa có đơn cho ngày này</div>';
+    return;
+  }
+  box.innerHTML = `
+    <div class="sub">Tổng: ${lastOrders.length} phần</div>
+    <table>
+      <tr><th>Họ tên</th><th>SĐT</th><th>Địa chỉ</th><th>Món</th><th>Ghi chú</th></tr>
+      ${lastOrders.map(o=>{
+        let its=[]; try{its=JSON.parse(o.itemsJson);}catch(e){}
+        return `<tr><td>${o.fullname}</td><td>${o.phone}</td><td>${o.address}</td><td>${its.join(', ')}</td><td>${o.note||''}</td></tr>`;
+      }).join('')}
+    </table>
+  `;
+}
+
+function exportCSV(){
+  if(lastOrders.length===0){ alert('Không có dữ liệu để xuất'); return; }
+  const date = document.getElementById('ordersDate').value;
+  let csv = 'Họ tên,SĐT,Địa chỉ,Món,Ghi chú\n';
+  lastOrders.forEach(o=>{
+    let its=[]; try{its=JSON.parse(o.itemsJson);}catch(e){}
+    const row = [o.fullname, o.phone, o.address, its.join(' | '), o.note||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');
+    csv += row + '\n';
+  });
+  const blob = new Blob(["\uFEFF"+csv], {type:'text/csv;charset=utf-8;'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `donhang_${date}.csv`;
+  link.click();
+}
+
+// -- Nạp bữa (cộng dồn số dư, không reset) --
+async function renderAdminTopup(){
+  const box = document.getElementById('adminContent');
+  box.innerHTML = `<div class="empty">Đang tải...</div>`;
+  const res = await api('adminGetUsers', {}, 'GET');
+  const users = (res.users || []).filter(u => !(u.isAdmin===true || u.isAdmin==='TRUE'));
+
+  box.innerHTML = `
+    <div class="sub">Khi có người nạp tiền (vd 210k = 6 bữa), chọn người đó và nhập số bữa để CỘNG THÊM vào số dư hiện có. Số dư không tự reset, chỉ giảm khi đặt món.</div>
+    <div id="topupMsg"></div>
+    <div class="row-flex">
+      <div>
+        <label>Người dùng</label>
+        <select id="tp_username">
+          ${users.map(u=>`<option value="${u.username}">${u.fullname||u.username} — hiện còn ${u.mealsRemaining}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <label>Số bữa nạp thêm</label>
+        <input type="number" id="tp_amount" value="6">
+      </div>
+    </div>
+    <label>Ghi chú (vd: chuyển khoản 210k ngày 1/7)</label>
+    <input id="tp_note">
+    <button class="btn" onclick="doTopup()">Nạp bữa</button>
+
+    <h2 style="margin-top:24px;">Lịch sử nạp bữa</h2>
+    <div id="topupHistory" class="empty">Đang tải...</div>
+  `;
+  loadTopupHistory();
+}
+
+async function doTopup(){
+  const username = document.getElementById('tp_username').value;
+  const amount = document.getElementById('tp_amount').value;
+  const note = document.getElementById('tp_note').value;
+  const msgEl = document.getElementById('topupMsg');
+  if(!username){
+    msgEl.innerHTML = '<div class="msg error">Chưa có người dùng nào (thêm ở tab Người dùng trước)</div>';
+    return;
+  }
+  const res = await api('adminTopupUser', {username, amount, note});
+  if(res.success){
+    msgEl.innerHTML = `<div class="msg success">Đã nạp. Số dư mới: ${res.mealsRemaining} bữa</div>`;
+    renderAdminTopup();
+  } else {
+    msgEl.innerHTML = `<div class="msg error">${res.message}</div>`;
+  }
+}
+
+async function loadTopupHistory(){
+  const box = document.getElementById('topupHistory');
+  const res = await api('adminGetTopups', {}, 'GET');
+  const topups = res.topups || [];
+  if(topups.length===0){
+    box.innerHTML = '<div class="empty">Chưa có lượt nạp nào</div>';
+    return;
+  }
+  box.innerHTML = `
+    <table>
+      <tr><th>Thời gian</th><th>Người dùng</th><th>Số bữa nạp</th><th>Ghi chú</th></tr>
+      ${topups.map(t=>`<tr><td>${t.timestamp}</td><td>${t.fullname||t.username}</td><td>+${t.amount}</td><td>${t.note||''}</td></tr>`).join('')}
+    </table>
+  `;
+}
+
+// ---------------- INIT ----------------
+renderLogin();
+</script>
+
+<div class="footer-note">Vị Tròn — Tròn vị, trọn tâm</div>
+
+</body>
+</html>
