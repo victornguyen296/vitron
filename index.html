@@ -124,6 +124,29 @@
   }
   .item-row input[type=checkbox], .item-row input[type=radio]{width:auto;margin:0;flex:none;accent-color:var(--orange);}
   .item-row label{margin:0;font-weight:400;color:var(--ink);font-size:14px;flex:1;cursor:pointer;}
+  .combo-wrap{position:relative;}
+  .suggest-list{
+    position:absolute;
+    top:calc(100% - 12px);
+    left:0;
+    right:0;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:8px;
+    max-height:220px;
+    overflow-y:auto;
+    z-index:30;
+    box-shadow:0 6px 16px rgba(43,38,32,0.12);
+  }
+  .suggest-item{
+    padding:10px 12px;
+    cursor:pointer;
+    font-size:14px;
+    border-bottom:1px solid var(--line);
+  }
+  .suggest-item:last-child{border-bottom:none;}
+  .suggest-item:hover{background:#FFF4E8;}
+  .suggest-item .meta{color:#9a927c;font-size:12px;}
   .tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
   .tab{
     padding:8px 16px;
@@ -576,22 +599,25 @@ function exportCSV(){
 
 // -- Nạp bữa (cộng dồn số dư, không reset) --
 let topupUsersAll = [];
+let tpSelectedUsername = '';
 
 async function renderAdminTopup(){
   const box = document.getElementById('adminContent');
   box.innerHTML = `<div class="empty">Đang tải...</div>`;
   const res = await api('adminGetUsers', {}, 'GET');
   topupUsersAll = (res.users || []).filter(u => !(u.isAdmin===true || u.isAdmin==='TRUE'));
+  tpSelectedUsername = '';
 
   box.innerHTML = `
-    <div class="sub">Khi có người nạp tiền (VD: 210k = 6 bữa), chọn người đó và nhập số bữa để CỘNG THÊM vào số dư hiện có. Số dư không tự reset, chỉ giảm khi đặt món.</div>
+    <div class="sub">Khi có người nạp tiền (VD: 210k = 6 bữa), gõ tên/username/SĐT để tìm người đó, bấm chọn, rồi nhập số bữa để CỘNG THÊM vào số dư hiện có. Số dư không tự reset, chỉ giảm khi đặt món.</div>
     <div id="topupMsg"></div>
-    <label>Tìm người dùng (username / họ tên / SĐT)</label>
-    <input id="tp_search" placeholder="Nhập để tìm..." oninput="renderTopupUserOptions()">
     <div class="row-flex">
-      <div>
-        <label>Người dùng</label>
-        <select id="tp_username"></select>
+      <div class="combo-wrap">
+        <label>Người dùng (gõ để tìm)</label>
+        <input id="tp_search" placeholder="Gõ username / họ tên / SĐT..." autocomplete="off"
+          oninput="renderTopupSuggestions()" onfocus="renderTopupSuggestions()"
+          onblur="setTimeout(hideTopupSuggestions, 150)">
+        <div id="tp_suggestions" class="suggest-list" style="display:none;"></div>
       </div>
       <div>
         <label>Số bữa nạp thêm</label>
@@ -605,30 +631,52 @@ async function renderAdminTopup(){
     <h2 style="margin-top:24px;">Lịch sử nạp bữa</h2>
     <div id="topupHistory" class="empty">Đang tải...</div>
   `;
-  renderTopupUserOptions();
   loadTopupHistory();
 }
 
-function renderTopupUserOptions(){
+function renderTopupSuggestions(){
   const q = (document.getElementById('tp_search').value || '').trim().toLowerCase();
-  const filtered = !q ? topupUsersAll : topupUsersAll.filter(u =>
-    (u.username||'').toLowerCase().includes(q) ||
-    (u.fullname||'').toLowerCase().includes(q) ||
-    (u.phone||'').toLowerCase().includes(q)
+  // Nếu ô đang hiển thị đúng tên người đã chọn thì bấm vào lại sẽ hiện full danh sách
+  const searchQ = (tpSelectedUsername && q.includes('—')) ? '' : q;
+  const filtered = !searchQ ? topupUsersAll : topupUsersAll.filter(u =>
+    (u.username||'').toLowerCase().includes(searchQ) ||
+    (u.fullname||'').toLowerCase().includes(searchQ) ||
+    (u.phone||'').toLowerCase().includes(searchQ)
   );
-  const sel = document.getElementById('tp_username');
-  sel.innerHTML = filtered.length
-    ? filtered.map(u=>`<option value="${u.username}">${u.fullname||u.username} — hiện còn ${u.mealsRemaining}</option>`).join('')
-    : '<option value="">Không tìm thấy</option>';
+  const box = document.getElementById('tp_suggestions');
+  if(filtered.length === 0){
+    box.innerHTML = '<div class="suggest-item" style="color:#9a927c;">Không tìm thấy người dùng nào</div>';
+  } else {
+    box.innerHTML = filtered.map(u => `
+      <div class="suggest-item" onmousedown="selectTopupUser('${u.username}')">
+        <div>${escapeHtml(u.fullname || u.username)}</div>
+        <div class="meta">${u.username}${u.phone ? ' · '+u.phone : ''} — hiện còn ${u.mealsRemaining} bữa</div>
+      </div>
+    `).join('');
+  }
+  box.style.display = 'block';
+}
+
+function hideTopupSuggestions(){
+  const box = document.getElementById('tp_suggestions');
+  if(box) box.style.display = 'none';
+}
+
+function selectTopupUser(username){
+  const u = topupUsersAll.find(x => x.username === username);
+  if(!u) return;
+  tpSelectedUsername = username;
+  document.getElementById('tp_search').value = `${u.fullname || u.username} — ${u.username} — hiện còn ${u.mealsRemaining}`;
+  hideTopupSuggestions();
 }
 
 async function doTopup(){
-  const username = document.getElementById('tp_username').value;
+  const username = tpSelectedUsername;
   const amount = document.getElementById('tp_amount').value;
   const note = document.getElementById('tp_note').value;
   const msgEl = document.getElementById('topupMsg');
   if(!username){
-    msgEl.innerHTML = '<div class="msg error">Chưa chọn được người dùng — thử xoá bớt từ khoá tìm kiếm</div>';
+    msgEl.innerHTML = '<div class="msg error">Chưa chọn người dùng — gõ để tìm rồi bấm chọn 1 người trong danh sách gợi ý</div>';
     return;
   }
   const res = await api('adminTopupUser', {username, amount, note});
