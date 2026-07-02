@@ -334,7 +334,7 @@ async function loadMenuForOrderDate(){
 
 function escapeHtml(str){
   const d = document.createElement('div');
-  d.innerText = str;
+  d.textContent = str;
   return d.innerHTML;
 }
 
@@ -615,8 +615,7 @@ async function renderAdminTopup(){
       <div class="combo-wrap">
         <label>Người dùng (gõ để tìm)</label>
         <input id="tp_search" placeholder="Gõ username / họ tên / SĐT..." autocomplete="off"
-          oninput="renderTopupSuggestions()" onfocus="renderTopupSuggestions()"
-          onblur="setTimeout(hideTopupSuggestions, 150)">
+          oninput="renderTopupSuggestions()" onfocus="renderTopupSuggestions()">
         <div id="tp_suggestions" class="suggest-list" style="display:none;"></div>
       </div>
       <div>
@@ -648,7 +647,7 @@ function renderTopupSuggestions(){
     box.innerHTML = '<div class="suggest-item" style="color:#9a927c;">Không tìm thấy người dùng nào</div>';
   } else {
     box.innerHTML = filtered.map(u => `
-      <div class="suggest-item" onmousedown="selectTopupUser('${u.username}')">
+      <div class="suggest-item" onclick="selectTopupUser('${u.username}')">
         <div>${escapeHtml(u.fullname || u.username)}</div>
         <div class="meta">${u.username}${u.phone ? ' · '+u.phone : ''} — hiện còn ${u.mealsRemaining} bữa</div>
       </div>
@@ -661,6 +660,14 @@ function hideTopupSuggestions(){
   const box = document.getElementById('tp_suggestions');
   if(box) box.style.display = 'none';
 }
+
+document.addEventListener('click', function(e){
+  const box = document.getElementById('tp_suggestions');
+  const input = document.getElementById('tp_search');
+  if(!box || !input) return;
+  if(e.target === input || box.contains(e.target)) return;
+  hideTopupSuggestions();
+});
 
 function selectTopupUser(username){
   const u = topupUsersAll.find(x => x.username === username);
