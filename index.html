@@ -202,10 +202,10 @@ function renderLogin(){
       <div class="sub">Dùng tài khoản do Vị Tròn cấp</div>
       <div id="loginMsg"></div>
       <label>Tài khoản</label>
-      <input id="username" placeholder="vd: hoang.nguyen">
+      <input id="username" placeholder="username">
       <label>Mật khẩu</label>
       <input id="password" type="password" placeholder="••••••">
-      <button class="btn" style="width:100%" onclick="doLogin()">Đăng nhập</button>
+      <button class="btn" style="width:100%" onclick="doLogin()">Login</button>
     </div>
   `;
 }
@@ -237,8 +237,8 @@ async function doLogin(){
 }
 
 // ---------------- USER: ĐẶT MÓN ----------------
-async function renderUserOrder(){
-  const date = todayStr();
+async function renderUserOrder(presetDate){
+  const date = presetDate || todayStr();
 
   app.innerHTML = `
     <div class="card">
@@ -296,11 +296,12 @@ async function loadMenuForOrderDate(){
     <div id="itemsList">
       ${items.map((it,i)=>`
         <div class="item-row">
-          <input type="checkbox" id="item_${i}" value="${escapeHtml(it)}">
+          <input type="radio" name="orderItem" id="item_${i}" value="${escapeHtml(it)}">
           <label for="item_${i}">${escapeHtml(it)}</label>
         </div>
       `).join('')}
     </div>
+    <div class="hint">Chỉ chọn 1 món cho mỗi lượt đặt. Muốn đặt thêm món khác cho cùng ngày này, đặt xong lượt này rồi đặt tiếp lượt mới.</div>
     <label style="margin-top:6px;">Ghi chú (nếu có)</label>
     <textarea id="orderNote" rows="2" placeholder="vd: ít cay, không hành..."></textarea>
     <button class="btn" onclick="doSubmitOrder('${date}')" ${currentUser.mealsRemaining<=0?'disabled':''}>Đặt món cho ngày ${date}</button>
@@ -315,19 +316,18 @@ function escapeHtml(str){
 }
 
 async function doSubmitOrder(date){
-
-  const checked = Array.from(document.querySelectorAll('#itemsList input[type=checkbox]:checked')).map(c=>c.value);
+  const selected = document.querySelector('#itemsList input[name=orderItem]:checked');
   const note = document.getElementById('orderNote').value;
   const msgEl = document.getElementById('orderMsg');
-  if(checked.length === 0){
-    msgEl.innerHTML = '<div class="msg error">Chọn ít nhất 1 món</div>';
+  if(!selected){
+    msgEl.innerHTML = '<div class="msg error">Chọn 1 món</div>';
     return;
   }
   try{
     const res = await api('submitOrder', {
       username: currentUser.username,
       date,
-      itemsJson: JSON.stringify(checked),
+      itemsJson: JSON.stringify([selected.value]),
       note
     });
     if(!res.success){
@@ -335,8 +335,8 @@ async function doSubmitOrder(date){
       return;
     }
     currentUser.mealsRemaining = res.mealsRemaining;
-    msgEl.innerHTML = '<div class="msg success">Đặt món thành công!</div>';
-    setTimeout(()=>renderUserOrder(), 900);
+    msgEl.innerHTML = '<div class="msg success">Đặt món thành công! Bạn có thể đặt tiếp món khác cho cùng ngày nếu muốn.</div>';
+    setTimeout(()=>renderUserOrder(date), 900);
   }catch(err){
     msgEl.innerHTML = `<div class="msg error">${err.message}</div>`;
   }
