@@ -122,7 +122,7 @@
     margin-bottom:8px;
     background:#fffdf9;
   }
-  .item-row input[type=checkbox]{width:auto;margin:0;}
+  .item-row input[type=checkbox], .item-row input[type=radio]{width:auto;margin:0;flex:none;accent-color:var(--orange);}
   .item-row label{margin:0;font-weight:400;color:var(--ink);font-size:14px;flex:1;cursor:pointer;}
   .tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
   .tab{
@@ -161,8 +161,8 @@
   Sau khi deploy Apps Script (Deploy > New deployment > Web app),
   dán URL web app vào đây.
 =================================================== */
-const API_URL = "https://script.google.com/macros/s/AKfycbxGHY8cvLAqfAhaP99qGTQJMjb3FFI_Lu2qZv8OPAM5wC2JefUnbTGSykTsLCsInVYchQ/exec";
-
+const API_URL = "DÁN_URL_APPS_SCRIPT_CỦA_BẠN_VÀO_ĐÂY";
+https://script.google.com/macros/s/AKfycbxGHY8cvLAqfAhaP99qGTQJMjb3FFI_Lu2qZv8OPAM5wC2JefUnbTGSykTsLCsInVYchQ/exec
 let currentUser = null;
 const app = document.getElementById('app');
 const logoutBtn = document.getElementById('logoutBtn');
@@ -202,10 +202,10 @@ function renderLogin(){
       <div class="sub">Dùng tài khoản do Vị Tròn cấp</div>
       <div id="loginMsg"></div>
       <label>Tài khoản</label>
-      <input id="username" placeholder="username">
+      <input id="username" placeholder="vd: hoang.nguyen">
       <label>Mật khẩu</label>
       <input id="password" type="password" placeholder="••••••">
-      <button class="btn" style="width:100%" onclick="doLogin()">Login</button>
+      <button class="btn" style="width:100%" onclick="doLogin()">Đăng nhập</button>
     </div>
   `;
 }
@@ -256,7 +256,7 @@ async function renderUserOrder(presetDate){
     <div class="card">
       <h2>Chọn ngày & món</h2>
       <label>Ngày muốn đặt</label>
-      <input type="date" id="orderDate" value="${date}" min="${date}" onchange="loadMenuForOrderDate()">
+      <input type="date" id="orderDate" value="${date}" min="${todayStr()}" onchange="loadMenuForOrderDate()">
       <div id="orderMsg"></div>
       <div id="itemsListWrap">
         <div class="empty">Đang tải menu...</div>
