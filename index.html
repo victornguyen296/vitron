@@ -614,8 +614,7 @@ async function renderAdminTopup(){
     <div class="row-flex">
       <div class="combo-wrap">
         <label>Người dùng (gõ để tìm)</label>
-        <input id="tp_search" placeholder="Gõ username / họ tên / SĐT..." autocomplete="off"
-          oninput="renderTopupSuggestions()" onfocus="renderTopupSuggestions()">
+        <input id="tp_search" placeholder="Gõ username / họ tên / SĐT..." autocomplete="off">
         <div id="tp_suggestions" class="suggest-list" style="display:none;"></div>
       </div>
       <div>
@@ -630,6 +629,12 @@ async function renderAdminTopup(){
     <h2 style="margin-top:24px;">Lịch sử nạp bữa</h2>
     <div id="topupHistory" class="empty">Đang tải...</div>
   `;
+
+  const searchInput = document.getElementById('tp_search');
+  searchInput.addEventListener('input', renderTopupSuggestions);
+  searchInput.addEventListener('keyup', renderTopupSuggestions);
+  searchInput.addEventListener('focus', renderTopupSuggestions);
+
   loadTopupHistory();
 }
 
